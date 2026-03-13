@@ -1,39 +1,53 @@
-import requests
+# backend/ai_assistant.py
 import os
-from groq import Groq
+from groq import Groq, GroqError
 
-client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
+# Read API key from environment variables
+GROQ_API_KEY = os.environ.get("GROQ_API_KEY")
 
-def ask_ai(message, cycle_data):
-
-    prompt = f"""
-You are Bloom, an AI menstrual health assistant.
-
-User cycle data:
-Age: {cycle_data['age']}
-Cycle Length: {cycle_data['cycle_length']}
-Days Since Last Period: {cycle_data['last_period_day']}
-Mood: {cycle_data['mood']}
-Symptom: {cycle_data['symptom']}
-
-User Question:
-{message}
-
-Give helpful menstrual health advice.
-"""
-
-    response = requests.post(
-        "https://api.groq.com/openai/v1/chat/completions",
-        headers={
-            "Authorization": f"Bearer {GROQ_API_KEY}",
-            "Content-Type": "application/json"
-        },
-        json={
-            "model": "llama3-8b-8192",
-            "messages":[
-                {"role":"user","content":prompt}
-            ]
-        }
+if not GROQ_API_KEY:
+    raise ValueError(
+        "GROQ_API_KEY environment variable not set. "
+        "Set it permanently using setx (Windows) or export (Linux/macOS)."
     )
 
-    return response.json()["choices"][0]["message"]["content"]
+# Initialize Groq client
+client = Groq(api_key=GROQ_API_KEY)
+
+def ask_ai(prompt: str, cycle_data: dict = None) -> str:
+    """
+    Ask the AI assistant a question.
+    
+    Args:
+        prompt: The question or instruction for the AI.
+        cycle_data: Optional dictionary with user cycle info or context.
+
+    Returns:
+        AI-generated text response.
+    """
+    if cycle_data is None:
+        cycle_data = {}  # default empty dict if none provided
+
+    try:
+        # Build the conversation messages
+        messages = [
+            {"role": "system", "content": "You are a helpful assistant."},
+            {"role": "user", "content": prompt},
+        ]
+
+        # If cycle_data exists, add it as another "assistant" or "system" message
+        if cycle_data:
+            messages.append({"role": "user", "content": f"Context: {cycle_data}"})
+
+        # Call the Groq Python SDK chat completions API
+        response = client.chat.completions.create(
+            messages=messages,
+            model="openai/gpt-oss-20b",  # choose a supported model
+        )
+
+        # Return the assistant's text
+        return response.choices[0].message.content
+
+    except GroqError as e:
+        # Gracefully return an error string instead of crashing
+        return f"AI request failed: {str(e)}"

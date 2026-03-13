@@ -1,3 +1,5 @@
+# backend/main.py
+import asyncio
 from fastapi import FastAPI, Depends
 from sqlalchemy.orm import Session
 from .database import engine, SessionLocal
@@ -5,23 +7,28 @@ from .models import Base, User
 from pydantic import BaseModel
 from .ai_assistant import ask_ai
 
+# Create tables if they don't exist
+Base.metadata.create_all(bind=engine)
+
 app = FastAPI(title="Bloom API with AI Assistant")
 
+# -------------------------
+# AI Assistant
+# -------------------------
 class PromptRequest(BaseModel):
     prompt: str
 
 @app.post("/ai/ask/")
-def ai_chat(req: PromptRequest):
-    """
-    Accepts a prompt and returns the Groq AI assistant response.
-    """
-    answer = ask_ai(req.prompt)
-    return {"response": answer}
-conn = engine.connect()
-print("Connected!")  # Should print without error
-conn.close()
+async def ai_ask(request: PromptRequest):
+    prompt = request.prompt
+    loop = asyncio.get_event_loop()
+    # Run blocking AI call in a thread
+    result = await loop.run_in_executor(None, ask_ai, prompt)
+    return {"response": result}
 
-# Dependency to get DB session
+# -------------------------
+# Database dependency
+# -------------------------
 def get_db():
     db = SessionLocal()
     try:
@@ -29,11 +36,16 @@ def get_db():
     finally:
         db.close()
 
+# -------------------------
+# Test root
+# -------------------------
 @app.get("/")
 def read_root():
     return {"message": "Hello FastAPI with PostgreSQL"}
 
-# Create a user
+# -------------------------
+# User CRUD
+# -------------------------
 @app.post("/users/")
 def create_user(name: str, email: str, db: Session = Depends(get_db)):
     user = User(name=name, email=email)
@@ -42,7 +54,6 @@ def create_user(name: str, email: str, db: Session = Depends(get_db)):
     db.refresh(user)
     return user
 
-# List all users
 @app.get("/users/")
 def list_users(db: Session = Depends(get_db)):
     return db.query(User).all()

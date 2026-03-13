@@ -769,73 +769,94 @@
             });
         });
 
-        // Chatbot functionality
-        const chatbotBtn = document.getElementById('chatbot-btn');
-        const chatbotModal = document.getElementById('chatbot-modal');
-        const closeChatbotModal = document.getElementById('close-chatbot-modal');
-        const chatInput = document.getElementById('chat-input');
-        const sendChatBtn = document.getElementById('send-chat-btn');
-        const botThinking = document.getElementById('bot-thinking');
+// Select elements
+const chatbotBtn = document.getElementById("chatbot-btn");
+const chatbotModal = document.getElementById("chatbot-modal");
+const closeChatbotBtn = document.getElementById("close-chatbot-modal");
+const sendChatBtn = document.getElementById("send-chat-btn");
+const chatInput = document.getElementById("chat-input");
+const chatContainer = chatbotModal.querySelector(".space-y-4");
+const botThinking = document.getElementById("bot-thinking");
 
-        chatbotBtn.addEventListener('click', () => {
-            chatbotModal.classList.toggle('hidden');
+// Toggle chatbot modal
+chatbotBtn.addEventListener("click", () => {
+    chatbotModal.classList.toggle("hidden");
+});
+closeChatbotBtn.addEventListener("click", () => {
+    chatbotModal.classList.add("hidden");
+});
+
+// Function to add messages
+function addMessage(text, sender="bot") {
+    const msgDiv = document.createElement("div");
+    msgDiv.classList.add("flex", sender === "user" ? "justify-end" : "items-start");
+
+    const innerDiv = document.createElement("div");
+    innerDiv.classList.add("p-3", "rounded-xl", "max-w-xs");
+
+    if(sender === "user") {
+        innerDiv.classList.add("bg-[#FF6F61]");
+        innerDiv.classList.add("rounded-tr-none", "text-white");
+        msgDiv.appendChild(innerDiv);
+        innerDiv.textContent = text;
+    } else {
+        innerDiv.classList.add("bg-[#fef6f6]", "rounded-tl-none");
+        const avatar = document.createElement("div");
+        avatar.classList.add("w-8","h-8","rounded-full","bg-[#C08081]","flex","items-center","justify-center","text-white","mr-2");
+        avatar.innerHTML = '<i class="fas fa-robot"></i>';
+        msgDiv.appendChild(avatar);
+        msgDiv.appendChild(innerDiv);
+        innerDiv.textContent = text;
+    }
+
+    chatContainer.appendChild(msgDiv);
+    chatContainer.scrollTop = chatContainer.scrollHeight;
+}
+
+// Function to send message
+async function sendMessage() {
+    const prompt = chatInput.value.trim();
+    if(!prompt) return;
+
+    // Add user message
+    addMessage(prompt, "user");
+    chatInput.value = "";
+
+    // Show thinking indicator
+    botThinking.classList.remove("hidden");
+    chatContainer.scrollTop = chatContainer.scrollHeight;
+
+    try {
+        const res = await fetch("http://127.0.0.1:8000/ai/ask/", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ prompt })
         });
 
-        closeChatbotModal.addEventListener('click', () => {
-            chatbotModal.classList.add('hidden');
-        });
+        const data = await res.json();
 
-        sendChatBtn.addEventListener('click', sendMessage);
-        chatInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') sendMessage();
-        });
+        // Hide thinking
+        botThinking.classList.add("hidden");
 
-        function sendMessage() {
-            const message = chatInput.value.trim();
-            if (message) {
-                // Add user message
-                const chatContainer = chatbotModal.querySelector('.space-y-4');
-                const userMessage = document.createElement('div');
-                userMessage.className = 'flex justify-end';
-                userMessage.innerHTML = `
-                    <div class="bg-[#FF6F61] p-3 rounded-xl rounded-tr-none max-w-xs">
-                        <p class="text-white">${message}</p>
-                    </div>
-                `;
-                chatContainer.appendChild(userMessage);
-
-                // Show bot thinking
-                botThinking.classList.remove('hidden');
-
-                // Clear input
-                chatInput.value = '';
-
-                // Scroll to bottom
-                const messagesContainer = chatbotModal.querySelector('.overflow-y-auto');
-                messagesContainer.scrollTop = messagesContainer.scrollHeight;
-
-                // Simulate bot response after delay
-                setTimeout(() => {
-                    botThinking.classList.add('hidden');
-
-                    // Add bot response
-                    const botResponse = document.createElement('div');
-                    botResponse.className = 'flex items-start';
-                    botResponse.innerHTML = `
-                        <div class="w-8 h-8 rounded-full bg-[#C08081] flex items-center justify-center text-white mr-2">
-                            <i class="fas fa-robot"></i>
-                        </div>
-                        <div class="bg-[#fef6f6] p-3 rounded-xl rounded-tl-none max-w-xs">
-                            <p>I understand you're asking about "${message}". Here's some information that might help...</p>
-                        </div>
-                    `;
-                    chatContainer.appendChild(botResponse);
-
-                    // Scroll to bottom again
-                    messagesContainer.scrollTop = messagesContainer.scrollHeight;
-                }, 1500);
-            }
+        if(data.response){
+            addMessage(data.response, "bot");
+        } else {
+            addMessage("Sorry, I couldn't get a response.", "bot");
         }
+    } catch(err) {
+        console.error(err);
+        botThinking.classList.add("hidden");
+        addMessage("Error contacting AI assistant.", "bot");
+    }
+}
+
+// Send button click
+sendChatBtn.addEventListener("click", sendMessage);
+
+// Enter key to send
+chatInput.addEventListener("keydown", (e) => {
+    if(e.key === "Enter") sendMessage();
+});
     </script>
 </body>
 
