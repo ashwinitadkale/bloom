@@ -1,12 +1,23 @@
-# backend/models.py
-from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy import Column, Integer, Float
+from .database import Base
 
-Base = declarative_base()
+class CycleLog(Base):
+    __tablename__ = "cycle_logs"
 
-# Example model
-from sqlalchemy import Column, Integer, String
-
-class User(Base):
-    __tablename__ = "users"
     id = Column(Integer, primary_key=True, index=True)
-    name = Column(String, nullable=False)
+
+    age = Column(Integer)
+    cycle_length = Column(Integer)
+    days_since_last = Column(Integer)
+
+    mood = Column(Integer)
+    flow_intensity = Column(Integer)
+    symptom = Column(Integer)
+
+    stress = Column(Integer)
+    sleep = Column(Integer)
+    exercise = Column(Integer)
+
+    bmi = Column(Float)
+    avg_cycle = Column(Float)
+    cycle_var = Column(Float)
