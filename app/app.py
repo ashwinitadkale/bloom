@@ -4,7 +4,6 @@ import numpy as np
 import os
 from fastapi import FastAPI
 
-app = Flask(__name__)
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 app = Flask(__name__, template_folder=os.path.join(BASE_DIR, "../templates"))
@@ -18,7 +17,6 @@ model = pickle.load(open(model_path, "rb"))
 @app.route("/")
 def home():
     return render_template("index.html")
-
 
 @app.route("/predict", methods=["POST"])
 def predict():
@@ -58,7 +56,8 @@ def predict():
     prediction = model.predict([features])[0]
 
     return render_template(
-        "index.html", prediction=f"Next period in {int(prediction)} days"
+        "index.html", 
+        prediction=f"Next period in {int(prediction)} days"
     )
 
 

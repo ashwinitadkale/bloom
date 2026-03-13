@@ -1,14 +1,23 @@
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import Column, Integer, String, Date
+from sqlalchemy import Column, Integer, Float
+from .database import Base
 
-# Base class for all models
-Base = declarative_base()
-
-# Example User model
-class User(Base):
-    __tablename__ = "users"
+class CycleLog(Base):
+    __tablename__ = "cycle_logs"
 
     id = Column(Integer, primary_key=True, index=True)
-    name = Column(String, nullable=False)
-    email = Column(String, unique=True, index=True, nullable=False)
-    birthdate = Column(Date, nullable=True)
+
+    age = Column(Integer)
+    cycle_length = Column(Integer)
+    days_since_last = Column(Integer)
+
+    mood = Column(Integer)
+    flow_intensity = Column(Integer)
+    symptom = Column(Integer)
+
+    stress = Column(Integer)
+    sleep = Column(Integer)
+    exercise = Column(Integer)
+
+    bmi = Column(Float)
+    avg_cycle = Column(Float)
+    cycle_var = Column(Float)
