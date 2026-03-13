@@ -5,3 +5,10 @@ xgboost
 pandas
 matplotlib
 seaborn
+fastapi
+uvicorn
+sqlalchemy
+psycopg2-binary
+pydantic
+python-dotenv
+requests
