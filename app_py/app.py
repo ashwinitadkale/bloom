@@ -1,11 +1,17 @@
 from flask import Flask, render_template, request
 import pickle
 import numpy as np
+import os
 
 app = Flask(__name__)
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
+app = Flask(__name__, template_folder=os.path.join(BASE_DIR, "../templates"))
+
+model_path = os.path.join(BASE_DIR, "../models/model.pkl")
+model = pickle.load(open(model_path, "rb"))
 # Load model
-model = pickle.load(open("model.pkl", "rb"))
+ #model = pickle.load(open("../models/model.pkl", "rb"))
 
 
 @app.route("/")
