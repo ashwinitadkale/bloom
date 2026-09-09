@@ -18,3 +18,4 @@ models_ml/cycle_model.pkl
 .idea/
 .DS_Store
 *.log
+*.zip
